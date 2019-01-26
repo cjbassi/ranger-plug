@@ -1,23 +1,21 @@
 # ranger-plug
 
+Small python script to manage [Ranger](https://github.com/ranger/ranger) plugins.
+
 Install with
 
 ```bash
-git clone https://github.com/cjbassi/ranger-plug ~/.local/share/ranger/plugins/ranger-plug
-pip install --user xdg gitpython
+pip install --user git+https://github.com/cjbassi/ranger-plug
 ```
 
-Commands include:
+Subcommands include:
 
-- PlugInstall
-- PlugUpdate
-- PlugClean
+- `install [repos]`
+- `uninstall [repos]`
+- `update`
 
-Specify git repos to install in a `~/.config/ranger/plugin_list` file.
-Repos can have the following format:
+Repos have the following format with host and branch optional:
 
 ```
 {host}/{owner}/{name}@{branch}  : github.com/cjbassi/ranger-plug@master
-{owner}/{name}@{branch}         : cjbassi/ranger-plug@master (github.com assumed)
-{owner}/{name}                  : cjbassi/ranger-plug
 ```

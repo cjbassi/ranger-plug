@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+
+import shutil
+from pathlib import Path
+import sys
+
+from xdg import XDG_CONFIG_HOME
+import git
+
+PLUGINS_PATH = Path(XDG_CONFIG_HOME) / 'ranger' / 'plugins'
+
+
+class Repo:
+    def __init__(self, host, owner, name, branch):
+        self.host = host
+        self.owner = owner
+        self.name = name
+        self.branch = branch
+
+    @classmethod
+    def from_string(_class, s):
+        fields = s.split('@')
+        branch = fields[1] if len(fields) == 2 else 'master'
+        fields = fields[0].split('/')
+        name = fields[-1]
+        owner = fields[-2] if len(fields) >= 2 else ''
+        host = fields[0] if len(fields) == 3 else 'github.com'
+        return _class(host, owner, name, branch)
+
+    def __str__(self):
+        if self.branch == 'master':
+            return self.url
+        else:
+            return self.url + '@' + self.branch
+
+    @property
+    def url(self):
+        return 'https://{}/{}/{}'.format(self.host, self.owner, self.name)
+
+
+def install(repo):
+    path = PLUGINS_PATH / repo.name
+    if path.exists():
+        print('{} is already installed'.format(repo))
+    else:
+        print('Cloning {}'.format(repo))
+        git.Git(PLUGINS_PATH).clone(repo.url)
+        git.Repo(path).git.checkout(repo.branch)
+
+
+def update():
+    for path in PLUGINS_PATH.iterdir():
+        if path.is_dir() and path.name[0] != '_':
+            print('Pulling {}'.format(path))
+            git.Repo(path).git.pull()
+
+
+def uninstall(repo):
+    path = PLUGINS_PATH / repo.name
+    if path.exists():
+        print('Removing {}'.format(repo.name))
+        shutil.rmtree(path)
+    else:
+        print('{} is not installed'.format(repo.name))
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        print('Please specify a subcommand:\ninstall\nupdate\nuninstall')
+        sys.exit(1)
+    if sys.argv[1] == 'install':
+        for url in sys.argv[2:]:
+            repo = Repo.from_string(url)
+            install(repo)
+    elif sys.argv[1] == 'uninstall':
+        for url in sys.argv[2:]:
+            repo = Repo.from_string(url)
+            uninstall(repo)
+    elif sys.argv[1] == 'update':
+        update()
+    else:
+        print('Invalid subcommand')
+        sys.exit(1)
